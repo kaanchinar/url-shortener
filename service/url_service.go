@@ -2,12 +2,11 @@ package service
 
 import (
 	"context"
-	"strconv"
 	"time"
 
-	"github.com/cespare/xxhash/v2"
 	"github.com/kaanchinar/url-shortener/dto"
 	"github.com/kaanchinar/url-shortener/model"
+	"github.com/kaanchinar/url-shortener/utils"
 )
 
 type URLRepository interface {
@@ -19,9 +18,13 @@ type URLService struct {
 	repo URLRepository
 }
 
+func NewURLService(repo URLRepository) *URLService {
+	return &URLService{repo: repo}
+}
+
 func (s *URLService) ShortenUrl(ctx context.Context, req dto.CreateShortURLRequest) (string, error) {
 	url := model.URL{
-		ID:          generateUniqueID(req.URL), // Implement this function to generate a unique ID
+		ID:          utils.GenerateUniqueID(),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		OriginalURL: req.URL,
@@ -35,6 +38,10 @@ func (s *URLService) ShortenUrl(ctx context.Context, req dto.CreateShortURLReque
 	return url.ID, nil
 }
 
-func generateUniqueID(originalURL string) string {
-	return strconv.FormatUint(xxhash.Sum64String(originalURL), 10)
+func (s *URLService) GetUrlById(ctx context.Context, id string) (*model.URL, error) {
+	url, err := s.repo.GetUrlById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return url, nil
 }
