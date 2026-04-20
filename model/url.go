@@ -7,4 +7,5 @@ type URL struct {
 	OriginalURL string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	ExpiresAt   *time.Time
 }

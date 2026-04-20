@@ -25,17 +25,17 @@ func NewURLRepository(db DB) *URLRepository {
 }
 
 func (r *URLRepository) CreateUrl(ctx context.Context, url model.URL) error {
-	query := `INSERT INTO urls (id, original_url, created_at, updated_at) VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO urls (id, original_url, created_at, updated_at, expires_at) VALUES ($1, $2, $3, $4, $5)`
 
-	_, err := r.db.Exec(ctx, query, url.ID, url.OriginalURL, url.CreatedAt, url.UpdatedAt)
+	_, err := r.db.Exec(ctx, query, url.ID, url.OriginalURL, url.CreatedAt, url.UpdatedAt, url.ExpiresAt)
 	return err
 
 }
 
 func (r *URLRepository) GetUrlById(ctx context.Context, id string) (*model.URL, error) {
-	query := `SELECT id, original_url, created_at, updated_at FROM urls WHERE id = $1`
+	query := `SELECT id, original_url, created_at, updated_at, expires_at FROM urls WHERE id = $1`
 	var url model.URL
-	err := r.db.QueryRow(ctx, query, id).Scan(&url.ID, &url.OriginalURL, &url.CreatedAt, &url.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&url.ID, &url.OriginalURL, &url.CreatedAt, &url.UpdatedAt, &url.ExpiresAt)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil

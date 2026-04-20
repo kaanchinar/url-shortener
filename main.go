@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/kaanchinar/url-shortener/handler"
@@ -33,15 +35,10 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	r.Use(middleware.Heartbeat("/ping"))
 
 	r.Route("/", func(r chi.Router) {
-		r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-			_, err := w.Write([]byte("pong"))
-			if err != nil {
-				return
-			}
-		})
-		r.Post("/shorten", urlHandler.ShortenURL)
+		r.With(httprate.LimitByIP(30, 1*time.Minute)).Post("/shorten", urlHandler.ShortenURL)
 		r.Get("/{id}", urlHandler.GetLongURL)
 	})
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -51,9 +52,15 @@ func (h *URLHandler) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	shortID := chi.URLParam(r, "id")
 	if shortID == "" {
 		http.Error(w, "Invalid short ID", http.StatusBadRequest)
+		return
 	}
 
 	urlModel, err := h.svc.GetUrlById(r.Context(), shortID)
+
+	if errors.Is(err, service.ErrURLExpired) {
+		http.Error(w, "URL has expired", http.StatusGone)
+		return
+	}
 	if err != nil || urlModel == nil {
 		http.Error(w, "Failed to get url", http.StatusNotFound)
 		return

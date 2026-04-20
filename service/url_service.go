@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/kaanchinar/url-shortener/dto"
@@ -23,11 +24,16 @@ func NewURLService(repo URLRepository) *URLService {
 }
 
 func (s *URLService) ShortenUrl(ctx context.Context, req dto.CreateShortURLRequest) (string, error) {
+
 	url := model.URL{
 		ID:          utils.GenerateUniqueID(),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		OriginalURL: req.URL,
+	}
+	if req.ExpiresInSeconds != nil {
+		exp := time.Now().Add(time.Duration(*req.ExpiresInSeconds) * time.Second)
+		url.ExpiresAt = &exp
 	}
 
 	err := s.repo.CreateUrl(ctx, url)
@@ -43,5 +49,12 @@ func (s *URLService) GetUrlById(ctx context.Context, id string) (*model.URL, err
 	if err != nil {
 		return nil, err
 	}
+
+	if url.ExpiresAt != nil && time.Now().After(*url.ExpiresAt) {
+		return nil, ErrURLExpired
+	}
+
 	return url, nil
 }
+
+var ErrURLExpired = errors.New("URL has expired")

@@ -1,7 +1,8 @@
 package dto
 
 type CreateShortURLRequest struct {
-	URL string `json:"url"`
+	URL              string `json:"url"`
+	ExpiresInSeconds *int64 `json:"expires_in_seconds,omitempty"`
 }
 
 type CreateShortURLResponse struct {
