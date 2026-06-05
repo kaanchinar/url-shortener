@@ -24,6 +24,9 @@ func NewURLService(repo URLRepository) *URLService {
 }
 
 func (s *URLService) ShortenUrl(ctx context.Context, req dto.CreateShortURLRequest) (string, error) {
+	if req.URL == "" {
+		return "", errors.New("url is required")
+	}
 
 	url := model.URL{
 		ID:          utils.GenerateUniqueID(),
@@ -38,7 +41,7 @@ func (s *URLService) ShortenUrl(ctx context.Context, req dto.CreateShortURLReque
 
 	err := s.repo.CreateUrl(ctx, url)
 	if err != nil {
-		return "there was an error on shorten url", err
+		return "", err
 	}
 
 	return url.ID, nil
@@ -48,6 +51,10 @@ func (s *URLService) GetUrlById(ctx context.Context, id string) (*model.URL, err
 	url, err := s.repo.GetUrlById(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if url == nil {
+		return nil, nil
 	}
 
 	if url.ExpiresAt != nil && time.Now().After(*url.ExpiresAt) {

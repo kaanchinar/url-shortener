@@ -19,9 +19,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment variables")
 	}
 	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -31,7 +30,8 @@ func main() {
 
 	urlRepo := repo.NewURLRepository(pool)
 	urlService := service.NewURLService(urlRepo)
-	urlHandler := handler.NewURLHandler(urlService)
+	baseURL := os.Getenv("BASE_URL")
+	urlHandler := handler.NewURLHandler(urlService, baseURL)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -42,9 +42,6 @@ func main() {
 		r.Get("/{id}", urlHandler.GetLongURL)
 	})
 
-	fmt.Println("Server running on http://localhost:3000")
-	err = http.ListenAndServe(":3000", r)
-	if err != nil {
-		return
-	}
+	log.Printf("Server running on %s\n", baseURL)
+	log.Fatal(http.ListenAndServe(":3000", r))
 }
