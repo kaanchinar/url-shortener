@@ -34,7 +34,18 @@ func (h *URLHandler) ShortenURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullShortURL := fmt.Sprintf("http://localhost:3000/%s", shortID)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	if fwdProto := r.Header.Get("X-Forwarded-Proto"); fwdProto != "" {
+		scheme = fwdProto
+	}
+	host := r.Host
+	if fwdHost := r.Header.Get("X-Forwarded-Host"); fwdHost != "" {
+		host = fwdHost
+	}
+	fullShortURL := fmt.Sprintf("%s://%s/%s", scheme, host, shortID)
 
 	res := dto.CreateShortURLResponse{
 		ID:       shortID,
